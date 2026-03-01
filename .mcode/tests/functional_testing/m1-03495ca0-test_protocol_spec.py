@@ -9,7 +9,7 @@ This script supports two modes:
 1. SRC Validation: Tests endpoints and captures responses (no expected_response)
 2. DST Contract Validation: Tests endpoints and validates responses match expected (has expected_response)
 
-Generated at: 2026-03-01T23:33:14.476379+00:00
+Generated at: 2026-03-01T23:43:16.281832+00:00
 Project: momolito-e-comerce
 Milestone: 1
 """
@@ -70,7 +70,7 @@ TEST_CASES: list[dict[str, Any]] = resolve_env_placeholders(
         "category": "HAPPY_PATH",
         "endpoint": "/usuarios/",
         "method": "POST",
-        "description": "Create a new user with valid nombre and email, then clean up",
+        "description": "Create a new user with valid nombre and email",
         "setup": null,
         "request_data": {
             "path": {},
@@ -107,13 +107,7 @@ TEST_CASES: list[dict[str, Any]] = resolve_env_placeholders(
             }
         },
         "expected_status": 400,
-        "cleanup": {
-            "endpoint": "/usuarios/{id}",
-            "method": "DELETE",
-            "path": {
-                "id": "$setup_id"
-            }
-        }
+        "cleanup": null
     },
     {
         "name": "create_user_missing_nombre",
@@ -187,7 +181,7 @@ TEST_CASES: list[dict[str, Any]] = resolve_env_placeholders(
         "category": "HAPPY_PATH",
         "endpoint": "/usuarios/{user_id}",
         "method": "GET",
-        "description": "Create a user, retrieve it by ID, then delete it",
+        "description": "Create a user, then retrieve it by ID",
         "setup": {
             "endpoint": "/usuarios/",
             "method": "POST",
@@ -205,13 +199,7 @@ TEST_CASES: list[dict[str, Any]] = resolve_env_placeholders(
             "body": null
         },
         "expected_status": 200,
-        "cleanup": {
-            "endpoint": "/usuarios/{id}",
-            "method": "DELETE",
-            "path": {
-                "id": "$setup_id"
-            }
-        }
+        "cleanup": null
     },
     {
         "name": "get_user_not_found",
@@ -246,13 +234,302 @@ TEST_CASES: list[dict[str, Any]] = resolve_env_placeholders(
         },
         "expected_status": 422,
         "cleanup": null
+    },
+    {
+        "name": "create_product_happy_path",
+        "category": "HAPPY_PATH",
+        "endpoint": "/productos/",
+        "method": "POST",
+        "description": "Create a new product with valid nombre, precio, and stock",
+        "setup": null,
+        "request_data": {
+            "path": {},
+            "query": {},
+            "body": {
+                "nombre": "Test Widget",
+                "precio": 25.99,
+                "stock": 50
+            }
+        },
+        "expected_status": 200,
+        "cleanup": null
+    },
+    {
+        "name": "create_product_missing_nombre",
+        "category": "MISSING_REQUIRED",
+        "endpoint": "/productos/",
+        "method": "POST",
+        "description": "Attempt to create a product without nombre, expect 422",
+        "setup": null,
+        "request_data": {
+            "path": {},
+            "query": {},
+            "body": {
+                "precio": 10.0,
+                "stock": 5
+            }
+        },
+        "expected_status": 422,
+        "cleanup": null
+    },
+    {
+        "name": "create_product_negative_precio",
+        "category": "INVALID_INPUT",
+        "endpoint": "/productos/",
+        "method": "POST",
+        "description": "Attempt to create a product with negative price, expect 422",
+        "setup": null,
+        "request_data": {
+            "path": {},
+            "query": {},
+            "body": {
+                "nombre": "Bad Price Product",
+                "precio": -5.0,
+                "stock": 10
+            }
+        },
+        "expected_status": 422,
+        "cleanup": null
+    },
+    {
+        "name": "create_product_negative_stock",
+        "category": "INVALID_INPUT",
+        "endpoint": "/productos/",
+        "method": "POST",
+        "description": "Attempt to create a product with negative stock, expect 422",
+        "setup": null,
+        "request_data": {
+            "path": {},
+            "query": {},
+            "body": {
+                "nombre": "Bad Stock Product",
+                "precio": 10.0,
+                "stock": -1
+            }
+        },
+        "expected_status": 422,
+        "cleanup": null
+    },
+    {
+        "name": "list_products_happy_path",
+        "category": "HAPPY_PATH",
+        "endpoint": "/productos/",
+        "method": "GET",
+        "description": "Retrieve the list of all products, expect 200 with an array",
+        "setup": null,
+        "request_data": {
+            "path": {},
+            "query": {},
+            "body": null
+        },
+        "expected_status": 200,
+        "cleanup": null
+    },
+    {
+        "name": "update_stock_happy_path",
+        "category": "HAPPY_PATH",
+        "endpoint": "/productos/{product_id}/stock/{stock}",
+        "method": "PATCH",
+        "description": "Create a product then update its stock to a new value",
+        "setup": {
+            "endpoint": "/productos/",
+            "method": "POST",
+            "body": {
+                "nombre": "Stock Update Product",
+                "precio": 15.0,
+                "stock": 10
+            },
+            "extract_id_from": "id"
+        },
+        "request_data": {
+            "path": {
+                "product_id": "$setup_id",
+                "stock": 25
+            },
+            "query": {},
+            "body": null
+        },
+        "expected_status": 200,
+        "cleanup": null
+    },
+    {
+        "name": "update_stock_product_not_found",
+        "category": "NOT_FOUND",
+        "endpoint": "/productos/{product_id}/stock/{stock}",
+        "method": "PATCH",
+        "description": "Attempt to update stock of a non-existent product, expect 404",
+        "setup": null,
+        "request_data": {
+            "path": {
+                "product_id": 999999,
+                "stock": 10
+            },
+            "query": {},
+            "body": null
+        },
+        "expected_status": 404,
+        "cleanup": null
+    },
+    {
+        "name": "list_orders_happy_path",
+        "category": "HAPPY_PATH",
+        "endpoint": "/pedidos/",
+        "method": "GET",
+        "description": "Retrieve the list of all orders, expect 200 with an array",
+        "setup": null,
+        "request_data": {
+            "path": {},
+            "query": {},
+            "body": null
+        },
+        "expected_status": 200,
+        "cleanup": null
+    },
+    {
+        "name": "get_order_not_found",
+        "category": "NOT_FOUND",
+        "endpoint": "/pedidos/{order_id}",
+        "method": "GET",
+        "description": "Attempt to retrieve an order with a non-existent ID, expect 404",
+        "setup": null,
+        "request_data": {
+            "path": {
+                "order_id": 999999
+            },
+            "query": {},
+            "body": null
+        },
+        "expected_status": 404,
+        "cleanup": null
+    },
+    {
+        "name": "create_order_happy_path",
+        "category": "HAPPY_PATH",
+        "endpoint": "/pedidos/",
+        "method": "POST",
+        "description": "Create an order using bootstrap user (id=1) and product (id=1)",
+        "setup": null,
+        "request_data": {
+            "path": {},
+            "query": {},
+            "body": {
+                "usuario_id": 1,
+                "producto_id": 1,
+                "cantidad": 2
+            }
+        },
+        "expected_status": 200,
+        "cleanup": null
+    },
+    {
+        "name": "create_order_user_not_found",
+        "category": "NOT_FOUND",
+        "endpoint": "/pedidos/",
+        "method": "POST",
+        "description": "Attempt to create an order with a non-existent user, expect 404",
+        "setup": null,
+        "request_data": {
+            "path": {},
+            "query": {},
+            "body": {
+                "usuario_id": 999999,
+                "producto_id": 1,
+                "cantidad": 1
+            }
+        },
+        "expected_status": 404,
+        "cleanup": null
+    },
+    {
+        "name": "create_order_product_not_found",
+        "category": "NOT_FOUND",
+        "endpoint": "/pedidos/",
+        "method": "POST",
+        "description": "Attempt to create an order with a non-existent product, expect 404",
+        "setup": null,
+        "request_data": {
+            "path": {},
+            "query": {},
+            "body": {
+                "usuario_id": 1,
+                "producto_id": 999999,
+                "cantidad": 1
+            }
+        },
+        "expected_status": 404,
+        "cleanup": null
+    },
+    {
+        "name": "create_order_insufficient_stock",
+        "category": "INVALID_INPUT",
+        "endpoint": "/pedidos/",
+        "method": "POST",
+        "description": "Attempt to create an order with quantity exceeding product stock, expect 400",
+        "setup": {
+            "endpoint": "/productos/",
+            "method": "POST",
+            "body": {
+                "nombre": "Low Stock Product",
+                "precio": 5.0,
+                "stock": 1
+            },
+            "extract_id_from": "id"
+        },
+        "request_data": {
+            "path": {},
+            "query": {},
+            "body": {
+                "usuario_id": 1,
+                "producto_id": "$setup_id",
+                "cantidad": 100
+            }
+        },
+        "expected_status": 400,
+        "cleanup": null
+    },
+    {
+        "name": "create_order_missing_cantidad",
+        "category": "MISSING_REQUIRED",
+        "endpoint": "/pedidos/",
+        "method": "POST",
+        "description": "Attempt to create an order without cantidad field, expect 422",
+        "setup": null,
+        "request_data": {
+            "path": {},
+            "query": {},
+            "body": {
+                "usuario_id": 1,
+                "producto_id": 1
+            }
+        },
+        "expected_status": 422,
+        "cleanup": null
+    },
+    {
+        "name": "create_order_zero_cantidad",
+        "category": "BOUNDARY",
+        "endpoint": "/pedidos/",
+        "method": "POST",
+        "description": "Attempt to create an order with cantidad=0 (must be >= 1), expect 422",
+        "setup": null,
+        "request_data": {
+            "path": {},
+            "query": {},
+            "body": {
+                "usuario_id": 1,
+                "producto_id": 1,
+                "cantidad": 0
+            }
+        },
+        "expected_status": 422,
+        "cleanup": null
     }
 ]''')
 )
 
 # Base URL for API requests (from app discovery, includes host:port)
-BASE_URL = os.path.expandvars("")
-HEALTH_CHECK_ENDPOINT = os.path.expandvars("")
+BASE_URL = os.path.expandvars("http://localhost:8000")
+HEALTH_CHECK_ENDPOINT = os.path.expandvars("/")
 REQUEST_TIMEOUT = 30
 HEALTH_CHECK_URL = f"{BASE_URL.rstrip('/')}/{HEALTH_CHECK_ENDPOINT.lstrip('/')}"
 # Per-endpoint routing table for microservices DST
