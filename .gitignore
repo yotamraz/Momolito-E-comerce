@@ -148,3 +148,6 @@ nosetests.xml
 coverage.xml
 *.cover
 *.py,cover
+
+# ----- Docker -----
+postgres_data/
